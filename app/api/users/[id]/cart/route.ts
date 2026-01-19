@@ -18,6 +18,7 @@ export async function GET(
 ) {
   const { id: userId } = await params;
   const productIds = carts[userId];
+
   if (productIds === undefined) {
     return new Response(JSON.stringify([]), {
       status: 200,
@@ -33,6 +34,31 @@ export async function GET(
 
   return new Response(JSON.stringify(cartProducts), {
     status: 200,
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+}
+
+type CartBody = {
+  productId: string;
+};
+
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<Params> },
+) {
+  const { id: userId } = await params;
+  const body: CartBody = await request.json();
+  const productId = body.productId;
+
+  carts[userId] = carts[userId] ? carts[userId].concat(productId) : [productId];
+  const cartProducts = carts[userId].map((id) =>
+    products.find((p) => p.id === id),
+  );
+
+  return new Response(JSON.stringify(cartProducts), {
+    status: 201,
     headers: {
       "Content-Type": "application/json",
     },
