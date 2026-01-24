@@ -64,3 +64,27 @@ export async function POST(
     },
   });
 }
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<Params> },
+) {
+  const { id: userId } = await params;
+  const body = await request.json();
+  const productId = body.productId;
+
+  carts[userId] = carts[userId]
+    ? carts[userId].filter((pid) => pid !== productId)
+    : [];
+
+  const cartProducts = carts[userId].map((id) =>
+    products.find((p) => p.id === id),
+  );
+
+  return new Response(JSON.stringify(cartProducts), {
+    status: 202,
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+}
