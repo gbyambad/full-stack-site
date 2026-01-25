@@ -1,6 +1,13 @@
-import { MongoClient, ServerApiVersion } from "mongodb";
+import { Db, MongoClient, ServerApiVersion } from "mongodb";
+
+let cachedClient: MongoClient | null = null;
+let cachedDb: Db | null = null;
 
 export async function connectToDb() {
+  if (cachedClient && cachedDb) {
+    return { client: cachedClient, db: cachedDb };
+  }
+
   const uri = `mongodb+srv://${process.env.MONGODB_USER}:${process.env.MONGODB_PASSWORD}@cluster0.op40g4p.mongodb.net/?appName=Cluster0`;
 
   const client = new MongoClient(uri, {
@@ -11,9 +18,10 @@ export async function connectToDb() {
     },
   });
 
-  try {
-    await client.connect();
-  } finally {
-    await client.close();
-  }
+  await client.connect();
+
+  cachedClient = client;
+  cachedDb = client.db("ecommerce-nextjs");
+
+  return { client, db: client.db() };
 }
