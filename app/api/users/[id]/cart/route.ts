@@ -1,22 +1,11 @@
 import { NextRequest } from "next/server";
-import { products } from "@/app/product-data";
 import { connectToDb } from "@/app/api/db";
 
-type ShoppingCart = Record<string, string[]>;
-
-const carts: ShoppingCart = {
-  "1": ["123", "234"],
-  "2": ["345", "456"],
-  "3": ["234"],
-};
 type Params = {
   id: string;
 };
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<Params> },
-) {
+export async function GET({ params }: { params: Promise<Params> }) {
   const { db } = await connectToDb();
   const userId = (await params).id;
   const userCart = await db.collection("carts").findOne({ userId });
@@ -83,17 +72,32 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<Params> },
 ) {
+  const { db } = await connectToDb();
   const { id: userId } = await params;
   const body = await request.json();
   const productId = body.productId;
 
-  carts[userId] = carts[userId]
-    ? carts[userId].filter((pid) => pid !== productId)
-    : [];
+  const updatedCart = await db
+    .collection("carts")
+    .findOneAndUpdate(
+      { userId },
+      { $pull: { cartIds: productId } },
+      { returnDocument: "after" },
+    );
 
-  const cartProducts = carts[userId].map((id) =>
-    products.find((p) => p.id === id),
-  );
+  if (!updatedCart) {
+    return new Response(JSON.stringify([]), {
+      status: 202,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+  }
+
+  const cartProducts = await db
+    .collection("products")
+    .find({ id: { $in: updatedCart.cartIds } })
+    .toArray();
 
   return new Response(JSON.stringify(cartProducts), {
     status: 202,
