@@ -7,7 +7,8 @@ type Params = {
 
 export async function GET({ params }: { params: Promise<Params> }) {
   const { db } = await connectToDb();
-  const userId = (await params).id;
+  const paramsData = await params;
+  const userId = paramsData?.id;
   const userCart = await db.collection("carts").findOne({ userId });
 
   if (!userCart) {
@@ -43,7 +44,7 @@ export async function POST(
 ) {
   const { db } = await connectToDb();
 
-  const userId = (await params).id;
+  const { id: userId } = await params;
   const body: CartBody = await request.json();
   const productId = body.productId;
 

@@ -1,8 +1,36 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import { Product } from "./product-data";
+import { useState } from "react";
 
-export default function ProductsList({ products }: { products: Product[] }) {
+export default function ProductsList({
+  products,
+  initialCartProducts,
+}: {
+  products: Product[];
+  initialCartProducts: Product[];
+}) {
+  const [cardProducts, setCardProducts] = useState(initialCartProducts);
+
+  async function addToCard(productId: string) {
+    const response = fetch(
+      `${process.env.NEXT_PUBLIC_BASE_URL}/api/users/2/cart`,
+      {
+        method: "POST",
+        body: JSON.stringify({ productId }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        cache: "no-store",
+      },
+    );
+    const updatedCart = await (await response).json();
+    setCardProducts(updatedCart);
+    console.log("Add to cart response:", response);
+  }
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
       {products.map((product) => (
@@ -12,8 +40,6 @@ export default function ProductsList({ products }: { products: Product[] }) {
           className="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition duration-300"
         >
           <div className="flex justify-center mb-4 h-48 relative">
-            {" "}
-            {/* Added height and relative positioning */}
             <Image
               src={"/" + product.imageUrl}
               alt="Product image"
@@ -23,6 +49,7 @@ export default function ProductsList({ products }: { products: Product[] }) {
           </div>
           <h2 className="text-xl font-semibold mb-2">{product.name}</h2>
           <p className="text-gray-600">${product.price}</p>
+          <button onClick={() => addToCard(product.id)}>Add to Cart</button>
         </Link>
       ))}
     </div>
