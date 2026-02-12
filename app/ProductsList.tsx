@@ -1,34 +1,38 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Product } from "./product-data";
-import { useState } from "react";
 
 export default function ProductsList({
   products,
-  initialCartProducts,
+  initialCartProducts = [],
 }: {
   products: Product[];
   initialCartProducts: Product[];
 }) {
-  const [cardProducts, setCardProducts] = useState(initialCartProducts);
+  const [cartProducts, setCartProducts] = useState(initialCartProducts);
 
-  async function addToCard(productId: string) {
-    const response = fetch(
+  async function addToCart(productId: string) {
+    const response = await fetch(
       `${process.env.NEXT_PUBLIC_BASE_URL}/api/users/2/cart`,
       {
         method: "POST",
-        body: JSON.stringify({ productId }),
+        body: JSON.stringify({
+          productId,
+        }),
         headers: {
           "Content-Type": "application/json",
         },
-        cache: "no-store",
       },
     );
-    const updatedCart = await (await response).json();
-    setCardProducts(updatedCart);
-    console.log("Add to cart response:", response);
+    const updatedCartProducts = await response.json();
+    setCartProducts(updatedCartProducts);
+  }
+
+  function productIsInCart(productId: string) {
+    return cartProducts.some((cp) => cp.id === productId);
   }
 
   return (
@@ -40,6 +44,8 @@ export default function ProductsList({
           className="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition duration-300"
         >
           <div className="flex justify-center mb-4 h-48 relative">
+            {" "}
+            {/* Added height and relative positioning */}
             <Image
               src={"/" + product.imageUrl}
               alt="Product image"
@@ -49,7 +55,27 @@ export default function ProductsList({
           </div>
           <h2 className="text-xl font-semibold mb-2">{product.name}</h2>
           <p className="text-gray-600">${product.price}</p>
-          <button onClick={() => addToCard(product.id)}>Add to Cart</button>
+          {productIsInCart(product.id) ? (
+            <button
+              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded w-full"
+              onClick={(e) => {
+                e.preventDefault();
+                console.log("Removing from cart... (Not implemented)");
+              }}
+            >
+              Remove from Cart
+            </button>
+          ) : (
+            <button
+              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded w-full"
+              onClick={(e) => {
+                e.preventDefault();
+                addToCart(product.id);
+              }}
+            >
+              Add to Cart
+            </button>
+          )}
         </Link>
       ))}
     </div>
