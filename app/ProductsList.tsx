@@ -31,6 +31,23 @@ export default function ProductsList({
     setCartProducts(updatedCartProducts);
   }
 
+  async function removeFromCart(productId: string) {
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_BASE_URL}/api/users/2/cart`,
+      {
+        method: "DELETE",
+        body: JSON.stringify({
+          productId,
+        }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      },
+    );
+    const updatedCartProducts = await response.json();
+    setCartProducts(updatedCartProducts);
+  }
+
   function productIsInCart(productId: string) {
     return cartProducts.some((cp) => cp.id === productId);
   }
@@ -60,7 +77,7 @@ export default function ProductsList({
               className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded w-full"
               onClick={(e) => {
                 e.preventDefault();
-                console.log("Removing from cart... (Not implemented)");
+                removeFromCart(product.id);
               }}
             >
               Remove from Cart

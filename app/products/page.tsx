@@ -7,7 +7,14 @@ export default async function ProductsPage() {
       cache: "no-store",
     },
   );
-  const products = await response.json();
+  let products = [];
+  try {
+    const text = await response.text();
+    products = text ? JSON.parse(text) : [];
+  } catch (error) {
+    products = [];
+    console.error("Failed to parse products:", error);
+  }
 
   const response2 = await fetch(
     `${process.env.NEXT_PUBLIC_BASE_URL}/api/users/2/cart`,
